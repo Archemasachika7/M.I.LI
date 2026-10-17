@@ -37,6 +37,11 @@ export class MultiInputController {
   public leftStick = { id: -1, sx: 115, sy: 0, cx: 115, cy: 0, dx: 0, dy: 0, r: 64 };
   public rightStick = { id: -1, sx: 0, sy: 0, cx: 0, cy: 0, dx: 0, dy: 0, r: 70, fireRing: 0.62 };
 
+  // Screen-space mouse position — used by the engine to draw a dynamic crosshair.
+  // Null until the mouse has actually moved over the canvas (avoids a phantom crosshair).
+  public mouseAimX: number | null = null;
+  public mouseAimY: number | null = null;
+
   constructor(private canvas: HTMLCanvasElement) {
     this.isTouchActive = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     this.bindListeners();
@@ -61,6 +66,8 @@ export class MultiInputController {
       this.state.deviceLabel = 'KB + Mouse';
       this.mouse.x = e.clientX;
       this.mouse.y = e.clientY;
+      this.mouseAimX = e.clientX;
+      this.mouseAimY = e.clientY;
     });
 
     this.canvas.addEventListener('mousedown', (e) => {
@@ -289,17 +296,55 @@ export class LobbyNetworkManager {
   private peer: Peer | null = null;
   private connections: DataConnection[] = [];
   private bc: BroadcastChannel | null = null;
+  private lanPeerLastSeen: Record<string, number> = {};
+  private lanDiscoveryTimer: number | null = null;
   public onPacket: ((pkt: any) => void) | null = null;
   public onPeerCountChange: ((count: number) => void) | null = null;
+  // Fires once when a second real player is detected (P2P connect OR LAN heartbeat reply)
+  public onLanPeerSeen: (() => void) | null = null;
+  private lanPeerAnnounced = false;
 
   constructor() {
     this.peerId = 'MILI-' + Math.floor(1000 + Math.random() * 9000);
     try {
       this.bc = new BroadcastChannel('mili_lan_channel');
       this.bc.onmessage = (ev) => {
-        if (this.onPacket) this.onPacket(ev.data);
+        const pkt = ev.data;
+        // handle LAN presence protocol internally (room-lock detection)
+        if (pkt && (pkt.type === 'LAN_HELLO' || pkt.type === 'LAN_HERE')) {
+          if (pkt.src && pkt.src !== this.peerId) {
+            this.lanPeerLastSeen[pkt.src] = Date.now();
+            if (!this.lanPeerAnnounced) {
+              this.lanPeerAnnounced = true;
+              if (this.onLanPeerSeen) this.onLanPeerSeen();
+            }
+          }
+          if (pkt.type === 'LAN_HELLO') {
+            // announce ourselves back so the other tab can unlock its room too
+            this.bc!.postMessage({ type: 'LAN_HERE', src: this.peerId });
+          }
+          return; // presence packets are not game traffic
+        }
+        if (this.onPacket) this.onPacket(pkt);
       };
     } catch (_) {}
+  }
+
+  // Host clicks OPEN ROOM → start probing for other players in this browser/LAN window.
+  // Two open tabs = two "devices" for educational LAN testing without a signalling server.
+  public startLanDiscovery() {
+    if (!this.bc || this.lanDiscoveryTimer !== null) return;
+    this.bc.postMessage({ type: 'LAN_HELLO', src: this.peerId });
+    this.lanDiscoveryTimer = window.setInterval(() => {
+      if (this.bc) this.bc.postMessage({ type: 'LAN_HELLO', src: this.peerId });
+      // expire peers silent for >3s so the room re-locks if everyone leaves
+      const now = Date.now();
+      const alive = Object.values(this.lanPeerLastSeen).filter((t) => now - t < 3000).length;
+      if (alive === 0 && this.lanPeerAnnounced) {
+        this.lanPeerAnnounced = false;
+        if (this.onPeerCountChange) this.onPeerCountChange(this.connections.length);
+      }
+    }, 1200);
   }
 
   public openHostRoom(customCode: string, onReady: (id: string) => void) {
@@ -312,6 +357,12 @@ export class LobbyNetworkManager {
       conn.on('data', (data) => {
         if (this.onPacket) this.onPacket(data);
       });
+      const dropPeer = () => {
+        this.connections = this.connections.filter((c) => c !== conn);
+        if (this.onPeerCountChange) this.onPeerCountChange(this.connections.length);
+      };
+      conn.on('close', dropPeer);
+      conn.on('error', dropPeer);
     });
   }
 
@@ -326,6 +377,9 @@ export class LobbyNetworkManager {
       });
       conn.on('data', (data) => {
         if (this.onPacket) this.onPacket(data);
+      });
+      conn.on('close', () => {
+        this.connections = this.connections.filter((c) => c !== conn);
       });
     });
   }

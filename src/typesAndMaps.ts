@@ -155,7 +155,46 @@ export const WEAPONS: WeaponSpec[] = [
   }
 ];
 
-export type PickupKind = 'MEDKIT' | 'EXTRA_HP' | 'GRENADE' | 'BOMB' | 'GUN_RPG' | 'GUN_SNIPER';
+export type PickupKind = 'MEDKIT' | 'EXTRA_HP' | 'GRENADE' | 'BOMB' | 'GUN_RPG' | 'GUN_SNIPER' | 'NITRO_CELL';
+
+// ==================== PHYSICS CONSTANTS (tuned for stable 60fps ticks) ====================
+export const PHYS = {
+  GRAVITY: 0.38,
+  MAX_FALL: 12,
+  TERMINAL_DROP: 16.5, // held-D super-dive speed cap
+  JET_THRUST: 0.74,
+  JET_MAX_UP: 6.8,
+  AIR_DRAG_X: 0.985,
+  GROUND_FRICTION: 0.8,
+  CROUCH_SPEED_MULT: 0.55,
+  SLIDE_BOOST: 1.45, // sprint + crouch while moving fast => slide boost
+  STOMP_BOUNCE: 7.5, // ground-slam bounce off soft landing
+  FALL_DMG_MIN: 15, // impact speed above which fall damage starts
+  FALL_DMG_SCALE: 6, // dmg = (impactSpeed - min) * scale
+  KNOCKBACK_SCALE: 0.16, // bullet momentum transfer per damage point
+};
+
+// ==================== WEATHER SYSTEM ====================
+export type WeatherId = 'CLEAR' | 'RAIN' | 'SNOW' | 'FOG' | 'ASHFALL';
+
+export interface WeatherSpec {
+  id: WeatherId;
+  label: string;
+  particleColor: string;
+  particleCount: number;
+  particleSpeed: number;
+  wind: number; // constant horizontal push on particles & light projectiles
+  visibilityOverlay: string; // rgba fog overlay
+  gripMult: number; // <1 = slippery platforms (rain/snow)
+}
+
+export const WEATHERS: Record<WeatherId, WeatherSpec> = {
+  CLEAR: { id: 'CLEAR', label: 'CLEAR SKIES', particleColor: '', particleCount: 0, particleSpeed: 0, wind: 0, visibilityOverlay: 'rgba(0,0,0,0)', gripMult: 1 },
+  RAIN: { id: 'RAIN', label: 'MONSOON RAIN', particleColor: 'rgba(147,197,253,0.55)', particleCount: 110, particleSpeed: 11, wind: 1.6, visibilityOverlay: 'rgba(30,58,95,0.16)', gripMult: 0.72 },
+  SNOW: { id: 'SNOW', label: 'BLIZZARD', particleColor: 'rgba(255,255,255,0.85)', particleCount: 90, particleSpeed: 2.4, wind: 2.2, visibilityOverlay: 'rgba(226,240,255,0.20)', gripMult: 0.6 },
+  FOG: { id: 'FOG', label: 'DENSE FOG', particleColor: 'rgba(203,213,225,0.35)', particleCount: 40, particleSpeed: 0.7, wind: 0.4, visibilityOverlay: 'rgba(148,163,184,0.34)', gripMult: 1 },
+  ASHFALL: { id: 'ASHFALL', label: 'VOLCANIC ASH', particleColor: 'rgba(251,146,60,0.7)', particleCount: 80, particleSpeed: 3.2, wind: -1.2, visibilityOverlay: 'rgba(69,26,3,0.25)', gripMult: 0.9 },
+};
 
 export interface MapPickupSpec {
   id: string;
@@ -196,6 +235,7 @@ export interface MountainMap {
   platforms: PlatformSpec[];
   bases: BaseSpec[];
   pickups: MapPickupSpec[];
+  weather: WeatherId;
 }
 
 export const MAPS: Record<string, MountainMap> = {
@@ -234,8 +274,10 @@ export const MAPS: Record<string, MountainMap> = {
       { id: 'p3', x: 280, y: 380, kind: 'MEDKIT' },
       { id: 'p4', x: 1500, y: 350, kind: 'GUN_SNIPER' },
       { id: 'p5', x: 620, y: 840, kind: 'BOMB' },
-      { id: 'p6', x: 1180, y: 840, kind: 'GRENADE' }
-    ]
+      { id: 'p6', x: 1180, y: 840, kind: 'GRENADE' },
+      { id: 'p7', x: 900, y: 840, kind: 'NITRO_CELL' }
+    ],
+    weather: 'RAIN'
   },
 
   map_highcliff: {
@@ -269,8 +311,10 @@ export const MAPS: Record<string, MountainMap> = {
       { id: 'h2', x: 350, y: 290, kind: 'GUN_SNIPER' },
       { id: 'h3', x: 1450, y: 290, kind: 'GUN_RPG' },
       { id: 'h4', x: 900, y: 670, kind: 'MEDKIT' },
-      { id: 'h5', x: 900, y: 840, kind: 'BOMB' }
-    ]
+      { id: 'h5', x: 900, y: 840, kind: 'BOMB' },
+      { id: 'h6', x: 500, y: 540, kind: 'NITRO_CELL' }
+    ],
+    weather: 'SNOW'
   },
 
   map_catacombs: {
@@ -302,7 +346,9 @@ export const MAPS: Record<string, MountainMap> = {
       { id: 'c2', x: 900, y: 620, kind: 'EXTRA_HP' },
       { id: 'c3', x: 600, y: 390, kind: 'MEDKIT' },
       { id: 'c4', x: 1200, y: 390, kind: 'BOMB' },
-      { id: 'c5', x: 900, y: 840, kind: 'GRENADE' }
-    ]
+      { id: 'c5', x: 900, y: 840, kind: 'GRENADE' },
+      { id: 'c6', x: 760, y: 620, kind: 'NITRO_CELL' }
+    ],
+    weather: 'ASHFALL'
   }
 };
