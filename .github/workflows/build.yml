@@ -1,0 +1,63 @@
+name: Build Web & Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-web-and-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java JDK 17 (for Android APK)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Dependencies & Build Web Bundle
+        run: |
+          npm install
+          npm run build
+
+      - name: Upload Web Build Artifact (Playable in Browser)
+        uses: actions/upload-artifact@v4
+        with:
+          name: MILOFIT-Web-App
+          path: dist/
+
+      - name: Generate Android Project & Force Landscape Orientation
+        run: |
+          npx cap add android
+          npx cap sync android
+          # Force Landscape Orientation in AndroidManifest.xml just like real Mini Militia
+          sed -i 's/<activity/<activity android:screenOrientation="sensorLandscape"/g' android/app/src/main/AndroidManifest.xml
+
+      - name: Compile Android Debug APK
+        working-directory: ./android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload Android APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MILOFIT-Android-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
