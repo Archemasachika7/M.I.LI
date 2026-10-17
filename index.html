@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Doodle Army: M.I.L.I. Militia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Chakra+Petch:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #141a14;
+      font-family: 'Chakra Petch', sans-serif;
+      color: #f4f4f0;
+    }
+    .stencil {
+      font-family: 'Black Ops One', cursive, sans-serif;
+      letter-spacing: 0.05em;
+      text-shadow: 2px 2px 0px #000, -1px -1px 0px #000;
+    }
+
+    /* ==================== AUTHENTIC MINI MILITIA ONBOARDING SCREEN ==================== */
+    #onboardingScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: radial-gradient(circle at center, #2e3b29 0%, #141a12 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 12px 18px;
+      overflow-y: auto;
+    }
+    .hazard-bar {
+      height: 12px;
+      width: 100%;
+      background: repeating-linear-gradient(
+        -45deg,
+        #eab308,
+        #eab308 14px,
+        #111 14px,
+        #111 28px
+      );
+      border: 2px solid #000;
+      border-radius: 4px;
+    }
+    .top-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 14px;
+      background: #232d20;
+      border: 3px solid #0d120c;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.6);
+      border-radius: 8px;
+      margin: 6px 0;
+    }
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 14px;
+      flex: 1;
+      min-height: 0;
+    }
+    @media (max-width: 860px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .metal-panel {
+      background: linear-gradient(180deg, #33402f 0%, #242e21 100%);
+      border: 3px solid #11160f;
+      border-radius: 10px;
+      padding: 12px;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.12), 0 6px 14px rgba(0,0,0,0.65);
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .panel-title {
+      background: #182016;
+      color: #facc15;
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: 2px solid #0b0f0a;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .avatar-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    #avatarPreviewCanvas {
+      width: 96px;
+      height: 110px;
+      background: #1a2318;
+      border: 3px solid #000;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+    .mili-input {
+      background: #151c13;
+      border: 2px solid #4a5d43;
+      color: #fff;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-family: 'Chakra Petch', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .mili-input:focus {
+      outline: none;
+      border-color: #facc15;
+    }
+    .photo-upload-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: #3f4f39;
+      border: 2px solid #000;
+      color: #fde047;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .pill-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .mili-btn {
+      background: linear-gradient(180deg, #4b5e45 0%, #344230 100%);
+      border: 2px solid #0d120c;
+      color: #e2e8f0;
+      padding: 6px 6px;
+      border-radius: 6px;
+      font-family: 'Chakra Petch', sans-serif;
+      font-weight: 800;
+      font-size: 11px;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+      transition: transform 0.06s;
+    }
+    .mili-btn:active {
+      transform: scale(0.96);
+    }
+    .mili-btn.active {
+      background: linear-gradient(180deg, #facc15 0%, #ca8a04 100%);
+      color: #000;
+      border-color: #000;
+    }
+    .mili-btn.green-cta {
+      background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
+      color: #052e16;
+      font-size: 14px;
+      padding: 10px;
+      border: 3px solid #000;
+    }
+    .mili-btn.orange-cta {
+      background: linear-gradient(180deg, #fb923c 0%, #ea580c 100%);
+      color: #000;
+      font-size: 14px;
+      padding: 10px;
+      border: 3px solid #000;
+    }
+    .map-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .map-card {
+      background: #182016;
+      border: 2px solid #3f4f3a;
+      border-radius: 8px;
+      padding: 8px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .map-card.active {
+      border-color: #facc15;
+      background: #2c3b27;
+      box-shadow: 0 0 0 2px #facc15;
+    }
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+    }
+    .lobby-box {
+      background: #151c13;
+      border: 2px solid #3d4d38;
+      border-radius: 8px;
+      padding: 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* ==================== AUTHENTIC MINI MILITIA IN-GAME HUD ==================== */
+    #gameHud {
+      display: none;
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 20;
+    }
+    /* Top-Center Health, Overheal & Jetpack Fuel Bars */
+    .da2-top-center {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(15, 20, 14, 0.78);
+      border: 2px solid #000;
+      border-radius: 8px;
+      padding: 6px 14px;
+      pointer-events: auto;
+    }
+    .da2-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      width: 190px;
+    }
+    .da2-bar-outer {
+      width: 100%;
+      height: 13px;
+      background: #111;
+      border: 2px solid #000;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+    #hudHpFill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #dc2626, #ef4444);
+      transition: width 0.08s linear;
+    }
+    #hudOverhealFill {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #22d3ee, #38bdf8);
+    }
+    #hudJetFill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+      transition: width 0.06s linear;
+    }
+    .da2-timer-box {
+      text-align: center;
+      min-width: 78px;
+      border-right: 2px solid #33412f;
+      padding-right: 10px;
+    }
+    /* Top-Left Score & Room Info */
+    .da2-top-left {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      background: rgba(15, 20, 14, 0.78);
+      border: 2px solid #000;
+      border-radius: 8px;
+      padding: 6px 12px;
+      pointer-events: auto;
+    }
+    /* Top-Right Authentic DA2 Weapon & Grenade Box */
+    .da2-top-right {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      pointer-events: auto;
+    }
+    .da2-weapon-card {
+      background: rgba(15, 20, 14, 0.82);
+      border: 2px solid #000;
+      border-radius: 8px;
+      padding: 7px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .da2-Utility-row {
+      display: flex;
+      gap: 6px;
+    }
+    .da2-item-pill {
+      background: rgba(20, 26, 18, 0.85);
+      border: 2px solid #000;
+      border-radius: 6px;
+      padding: 4px 9px;
+      font-weight: 800;
+      font-size: 12px;
+      color: #fff;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+    #killfeedBox {
+      position: absolute;
+      top: 72px;
+      left: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    #gameCanvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      cursor: crosshair;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== 1. MINI MILITIA BARRACKS & LOBBY SCREEN ==================== -->
+  <div id="onboardingScreen">
+    <div class="hazard-bar"></div>
+
+    <div class="top-banner">
+      <div>
+        <div class="stencil" style="font-size: 22px; color: #facc15;">DOODLE ARMY: M.I.L.I. MILITIA</div>
+        <div style="font-size: 11px; color: #a3b899; font-weight: 700;">WEB (KB/MOUSE + XBOX CONTROLLER) & ANDROID DUAL-STICK EDITION</div>
+      </div>
+      <div id="controllerStatusBadge" style="background:#151c13; border:2px solid #4ade80; color:#4ade80; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:800;">
+        INPUT: AUTO (KB/MOUSE • XBOX • TOUCH)
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <!-- LEFT PANEL: SOLDIER CUSTOMIZER (PHOTO, NAME, USERNAME, MASK, ROLE) -->
+      <div class="metal-panel">
+        <div class="panel-title stencil">
+          <span>1. SOLDIER BARRACKS & IDENTITY</span>
+          <span id="roleBadgeText" style="color:#4ade80; font-size:11px;">ROLE: RAIDER</span>
+        </div>
+
+        <div class="avatar-row">
+          <canvas id="avatarPreviewCanvas" width="96" height="110"></canvas>
+          <div class="input-group">
+            <input id="inpFullName" class="mili-input" type="text" placeholder="Full Name (e.g. Archishman)" value="Archishman" />
+            <input id="inpUsername" class="mili-input" type="text" placeholder="Callsign / Username" value="SOLOLEVELLER" />
+            <div style="display:flex; gap:6px;">
+              <label class="photo-upload-label" style="flex:1;">
+                📷 UPLOAD PHOTO (OPTIONAL)
+                <input id="inpPhotoFile" type="file" accept="image/*" style="display:none;" />
+              </label>
+              <button id="btnClearPhoto" class="mili-btn" style="padding:4px 8px;">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size:11px; font-weight:800; color:#cbd5e1;">SELECT TACTICAL MASK:</div>
+        <div class="pill-row" id="maskButtonsRow">
+          <button class="mili-btn active" data-mask="GAS_MASK">GAS MASK</button>
+          <button class="mili-btn" data-mask="VISOR">BALLISTIC VISOR</button>
+          <button class="mili-btn" data-mask="SKULL">SKULL MASK</button>
+          <button class="mili-btn" data-mask="NVG">NIGHT VISION</button>
+        </div>
+
+        <div style="font-size:11px; font-weight:800; color:#cbd5e1;">SELECT SOLDIER ROLE (ACTIVE IN BASES & ROLES MODE):</div>
+        <div class="pill-row" id="roleButtonsRow">
+          <button class="mili-btn" data-role="MEDIC">MEDIC</button>
+          <button class="mili-btn" data-role="SURVIVOR">SURVIVOR</button>
+          <button class="mili-btn active" data-role="RAIDER">RAIDER</button>
+          <button class="mili-btn" data-role="SCOUT">SCOUT</button>
+        </div>
+        <div id="rolePerkLabel" style="font-size:11px; color:#86efac; background:#151c13; padding:6px 8px; border-radius:6px; border:1px solid #2e3d29;">
+          RAIDER: Starts with Heavy RPG + 3 Cluster Bombs for Base Breaching (120 HP).
+        </div>
+
+        <!-- ONE-CLICK SOLO PLAY VS BOTS CTA -->
+        <button id="btnSoloPlayBots" class="mili-btn orange-cta stencil" style="margin-top:auto;">
+          ⚔️ SOLO PLAY VS BOTS (INSTANT 5:00 MATCH)
+        </button>
+      </div>
+
+      <!-- RIGHT PANEL: 3 MOUNTAIN MAPS, 5 GAME MODES & CREATE/JOIN LAN LOBBY -->
+      <div class="metal-panel">
+        <div class="panel-title stencil">
+          <span>2. MOUNTAIN ARENA & MULTIPLAYER LOBBY</span>
+          <span style="color:#38bdf8; font-size:11px;">TIMER: 05:00</span>
+        </div>
+
+        <div style="font-size:11px; font-weight:800; color:#cbd5e1;">CHOOSE MOUNTAIN TERRAIN (3 MAPS):</div>
+        <div class="map-cards" id="mapCardsRow">
+          <div class="map-card active" data-map="map_outpost">
+            <div class="stencil" style="font-size:12px; color:#facc15;">01. OUTPOST RIDGE</div>
+            <div style="font-size:10px; color:#cbd5e1;">Mountain Fortress, Rope Bridge & Sniper Nest</div>
+          </div>
+          <div class="map-card" data-map="map_highcliff">
+            <div class="stencil" style="font-size:12px; color:#38bdf8;">02. HIGHCLIFF PEAKS</div>
+            <div style="font-size:10px; color:#cbd5e1;">Snowy Twin Summits & Glacial Ice Bridge</div>
+          </div>
+          <div class="map-card" data-map="map_catacombs">
+            <div class="stencil" style="font-size:12px; color:#fb923c;">03. RED ROCK CRAG</div>
+            <div style="font-size:10px; color:#cbd5e1;">Volcanic Mountain Canyon & Steel Catwalks</div>
+          </div>
+        </div>
+
+        <div style="font-size:11px; font-weight:800; color:#cbd5e1;">SELECT MATCH FORMAT & RULESET:</div>
+        <div class="mode-grid" id="modeButtonsGrid">
+          <button class="mili-btn" data-mode="1V1_SOLO">1v1 SOLO VS SOLO</button>
+          <button class="mili-btn" data-mode="2V2_DUO">2v2 DUO SQUAD</button>
+          <button class="mili-btn" data-mode="4V4_WITH_RULES">4v4 WITH RULES (ALL ATTACK)</button>
+          <button class="mili-btn active" data-mode="4V4_WITHOUT_RULES">4v4 WITHOUT RULES (BASES & ROLES)</button>
+        </div>
+
+        <!-- CREATE OR JOIN LOBBY BOX -->
+        <div class="lobby-box">
+          <div style="display:flex; gap:6px;">
+            <button id="tabCreateLobby" class="mili-btn active" style="flex:1;">CREATE A LOBBY (HOST ID)</button>
+            <button id="tabJoinLobby" class="mili-btn" style="flex:1;">JOIN A LOBBY (ENTER ID)</button>
+          </div>
+
+          <div id="createLobbyPane" style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#0d120c; padding:6px 10px; border-radius:6px;">
+              <span style="font-size:11px; color:#94a3b8;">SHARE ROOM ID (LAN / P2P):</span>
+              <span id="hostRoomIdText" class="stencil" style="font-size:16px; color:#facc15;">MILI-4821</span>
+              <button id="btnHostStartRoom" class="mili-btn" style="background:#0284c7; color:#fff;">OPEN ROOM</button>
+            </div>
+            <div id="lobbyPlayersList" style="font-size:11px; color:#4ade80; font-weight:700;">
+              Status: Click "OPEN ROOM" to let Phone/Tablet/Laptop players join, or click DEPLOY below.
+            </div>
+          </div>
+
+          <div id="joinLobbyPane" style="display:none; flex-direction:column; gap:6px;">
+            <div style="display:flex; gap:6px;">
+              <input id="inpJoinRoomId" class="mili-input" style="flex:1;" type="text" placeholder="Enter Host ID (e.g. MILI-4821)" />
+              <button id="btnConnectPeer" class="mili-btn" style="background:#0284c7; color:#fff; padding:0 14px;">JOIN ID</button>
+            </div>
+            <div id="joinStatusText" style="font-size:11px; color:#38bdf8; font-weight:700;">
+              Enter the Room ID shared by the Host to sync immediately.
+            </div>
+          </div>
+        </div>
+
+        <button id="btnDeployLobbyMatch" class="mili-btn green-cta stencil" style="margin-top:auto;">
+          🚀 DEPLOY TO BATTLEFIELD (05:00)
+        </button>
+      </div>
+    </div>
+
+    <div class="hazard-bar"></div>
+  </div>
+
+  <!-- ==================== 2. AUTHENTIC MINI MILITIA IN-GAME HUD ==================== -->
+  <div id="gameHud">
+    <!-- Top-Left Score & Mode Info -->
+    <div class="da2-top-left">
+      <div id="hudModeTitle" class="stencil" style="font-size:12px; color:#facc15;">4v4 WITHOUT RULES (BASES)</div>
+      <div style="font-size:13px; font-weight:800; margin-top:2px;">
+        <span style="color:#4ade80;">MILI: <span id="hudScoreMili">0</span></span>
+        <span style="color:#64748b; margin:0 6px;">|</span>
+        <span style="color:#f87171;">BANDITS: <span id="hudScoreBandits">0</span></span>
+      </div>
+      <div id="hudInputBadge" style="font-size:10px; color:#38bdf8; font-weight:700; margin-top:2px;">
+        INPUT: KB+MOUSE / XBOX / TOUCH
+      </div>
+    </div>
+
+    <!-- Top-Center Timer + Health Bar (+Extra HP Overheal) + Nitro Fuel Bar -->
+    <div class="da2-top-center">
+      <div class="da2-timer-box">
+        <div id="hudMatchTimer" class="stencil" style="font-size:22px; color:#fff;">05:00</div>
+        <div style="font-size:9px; color:#facc15; font-weight:800;">TIME LEFT</div>
+      </div>
+      <div class="da2-bars">
+        <div style="display:flex; justify-content:space-between; font-size:10px; font-weight:800;">
+          <span style="color:#f87171;">❤ HEALTH <span id="hudHpNumbers">120/120</span></span>
+          <span id="hudOverhealTag" style="color:#38bdf8; display:none;">+EXTRA HP</span>
+        </div>
+        <div class="da2-bar-outer">
+          <div id="hudHpFill"></div>
+          <div id="hudOverhealFill"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:10px; font-weight:800;">
+          <span style="color:#38bdf8;">🚀 JETPACK NITRO</span>
+          <span id="hudRoleSmall" style="color:#fde047;">RAIDER</span>
+        </div>
+        <div class="da2-bar-outer">
+          <div id="hudJetFill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top-Right DA2 Weapon Box, Grenade, Bomb & Medkit Buttons -->
+    <div class="da2-top-right">
+      <div class="da2-weapon-card" id="hudWeaponSwitchBox" title="Click or Press Q/X to Switch Weapon">
+        <div>
+          <div id="hudGunName" class="stencil" style="font-size:14px; color:#facc15;">AK-47 ASSAULT</div>
+          <div id="hudAmmoText" style="font-size:13px; font-weight:800; color:#fff;">30 / 120</div>
+          <div style="font-size:9px; color:#94a3b8;">[Q / Y] SWITCH • [R / X] RELOAD</div>
+        </div>
+      </div>
+      <div class="da2-Utility-row">
+        <button id="btnHudGrenade" class="da2-item-pill" title="Right-Click / G / RB">💣 <span id="hudNadeCount">3</span></button>
+        <button id="btnHudBomb" class="da2-item-pill" title="Key B / LB">🧨 <span id="hudBombCount">2</span></button>
+        <button id="btnHudMedkit" class="da2-item-pill" title="Key H / D-Pad Up">➕ <span id="hudMedCount">1</span></button>
+        <button id="btnHudExit" class="da2-item-pill" style="background:#7f1d1d;">MENU</button>
+      </div>
+    </div>
+
+    <!-- Live Killfeed -->
+    <div id="killfeedBox"></div>
+  </div>
+
+  <!-- ==================== 3. MAIN 2D ARENA CANVAS ==================== -->
+  <canvas id="gameCanvas"></canvas>
+
+  <script type="module" src="/src/engineAndMain.ts"></script>
+</body>
+</html>
