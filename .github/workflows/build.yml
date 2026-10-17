@@ -2,7 +2,7 @@ name: Build Web & Android APK
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "MOCHI-Backend" ]
   workflow_dispatch:
 
 permissions:
@@ -30,7 +30,7 @@ jobs:
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Install Dependencies & Build Web Bundle
         run: |
