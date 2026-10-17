@@ -1,0 +1,6 @@
+{
+  "appId": "com.archishman.milofit",
+  "appName": "Mini Militia MILOFIT",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
